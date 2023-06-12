@@ -66,7 +66,15 @@ const retrieveResults = (wpt, testId) => {
   });
 };
 
-// modified based off https://github.com/amondnet/vercel-action
+/**
+ * most of the functionality below was
+ * modified based off https://github.com/amondnet/vercel-action
+ */
+
+function isPullRequestType(event) {
+  return event.startsWith('pull_request');
+}
+
 async function findCommentsForEvent() {
   core.debug("find comments for event");
   if (context.eventName === "push") {
