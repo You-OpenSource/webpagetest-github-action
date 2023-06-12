@@ -18,8 +18,8 @@
   },
   "homepage": "https://github.com/WPO-Foundation/webpagetest-github-action#readme",
   "dependencies": {
-    "@actions/core": "^1.2.6",
-    "@actions/github": "^5.0.3",
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^2.1.1",
     "ejs": "^3.1.6",
     "webpagetest": "^0.6.0"
   }
