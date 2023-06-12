@@ -27,7 +27,11 @@ const METRICS = {
   "chromeUserTiming.CumulativeLayoutShift": "Cumulative Layout Shift",
 };
 
-const isReportSupported = () => GH_EVENT_NAME == "pull_request" || GH_EVENT_NAME == "issue_comment";
+const isReportSupported = () =>
+  GH_EVENT_NAME == "pull_request" || GH_EVENT_NAME == "issue_comment";
+
+const octokit = github.getOctokit(GITHUB_TOKEN, { log: console });
+const context = github.context;
 
 const runTest = (wpt, url, options) => {
   // clone options object to avoid WPT wrapper issue
@@ -61,12 +65,98 @@ const retrieveResults = (wpt, testId) => {
     });
   });
 };
+
+// modified based off https://github.com/amondnet/vercel-action
+async function findCommentsForEvent() {
+  core.debug("find comments for event");
+  if (context.eventName === "push") {
+    core.debug('event is "commit", use "listCommentsForCommit"');
+    return octokit.repos.listCommentsForCommit({
+      ...context.repo,
+      commit_sha: context.sha,
+    });
+  }
+  if (isPullRequestType(context.eventName)) {
+    core.debug(`event is "${context.eventName}", use "listComments"`);
+    return octokit.issues.listComments({
+      ...context.repo,
+      issue_number: context.issue.number,
+    });
+  }
+  core.error("not supported event_type");
+  return [];
+}
+
+// modified based off https://github.com/amondnet/vercel-action
+async function findPreviousComment(text) {
+  if (!octokit) {
+    return null;
+  }
+  core.info("find comment");
+  const { data: comments } = await findCommentsForEvent();
+
+  const webPageTextResultsComment = comments.find((comment) =>
+    comment.body.startsWith(text)
+  );
+  if (webPageTextResultsComment) {
+    core.info("previous comment found");
+    return webPageTextResultsComment.id;
+  }
+  core.info("previous comment not found");
+  return null;
+}
+
+const STARTS_WITH_STRING = "# WebPageTest Test Results";
+async function createCommentOnCommit(body) {
+  if (!octokit) {
+    return;
+  }
+
+  // get comments first and see if one matches our template
+  const previousCommentId = await findPreviousComment(STARTS_WITH_STRING);
+  if (previousCommentId) {
+    await octokit.repos.updateCommitComment({
+      ...context.repo,
+      comment_id: previousCommentId,
+      body,
+    });
+  } else {
+    await octokit.repos.createCommitComment({
+      ...context.repo,
+      commit_sha: context.sha,
+      body,
+    });
+  }
+}
+
+async function createCommentOnPullRequest(body) {
+  if (!octokit) {
+    return;
+  }
+
+  // get comments first and see if one matches our template
+  const previousCommentId = await findPreviousComment(STARTS_WITH_STRING);
+  if (previousCommentId) {
+    await octokit.issues.updateComment({
+      ...context.repo,
+      comment_id: previousCommentId,
+      body,
+    });
+  } else {
+    await octokit.issues.createComment({
+      ...context.repo,
+      issue_number: context.issue.number,
+      body,
+    });
+  }
+}
+
 async function renderComment(data) {
   try {
-    const octokit = github.getOctokit(GITHUB_TOKEN, { log: console });
-    const context = github.context;
-
-    let markdown = await ejs.renderFile(__nccwpck_require__.ab + "comment.md", data);
+    let markdown = await ejs.renderFile(
+      __nccwpck_require__.ab + "comment.md",
+      data
+    );
     markdown.replace(/\%/g, "%25").replace(/\n/g, "%0A").replace(/\r/g, "%0D");
 
     const prNumber =
@@ -76,18 +166,21 @@ async function renderComment(data) {
         ? context.payload.issue.number
         : null;
 
-    if (!prNumber) throw new Error('Incompatible event "' + GH_EVENT_NAME + '"');
+    if (!prNumber)
+      throw new Error('Incompatible event "' + GH_EVENT_NAME + '"');
 
-    //submit a comment
-    await octokit.rest.issues.createComment({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issue_number: prNumber,
-      body: markdown,
-    });
+    if (context.issue.number) {
+      // this is a PR
+      await createCommentOnPullRequest(markdown);
+    } else if (context.eventName === "push") {
+      // this a commit
+      await createCommentOnCommit(markdown);
+    }
   } catch (e) {
     console.log(e);
-    core.setFailed(`Action failed with error: ${e.statusText || JSON.stringify(e)}`);
+    core.setFailed(
+      `Action failed with error: ${e.statusText || JSON.stringify(e)}`
+    );
   }
 }
 function collectData(results, runData) {
@@ -131,7 +224,9 @@ async function run() {
         ...settings,
       };
     } else {
-      core.setFailed("The specified WebPageTest settings aren't a valid JavaScript object");
+      core.setFailed(
+        "The specified WebPageTest settings aren't a valid JavaScript object"
+      );
     }
   }
   if (WPT_BUDGET) {
@@ -167,7 +262,10 @@ async function run() {
               );
 
               if (isReportSupported()) {
-                let testResults = await retrieveResults(wpt, result.result.testId);
+                let testResults = await retrieveResults(
+                  wpt,
+                  result.result.testId
+                );
                 collectData(testResults, runData);
               }
               // testspecs also returns the number of assertion fails as err
@@ -190,7 +288,10 @@ async function run() {
               );
 
               if (isReportSupported()) {
-                let testResults = await retrieveResults(wpt, result.result.data.id);
+                let testResults = await retrieveResults(
+                  wpt,
+                  result.result.data.id
+                );
                 collectData(testResults, runData);
               }
               return;
@@ -199,12 +300,16 @@ async function run() {
             }
           } catch (e) {
             console.log(e);
-            core.setFailed(`Action failed with error: ${e.statusText || JSON.stringify(e)}`);
+            core.setFailed(
+              `Action failed with error: ${e.statusText || JSON.stringify(e)}`
+            );
           }
         });
       } catch (e) {
         console.log(e);
-        core.setFailed(`Action failed with error: ${e.statusText || JSON.stringify(e)}`);
+        core.setFailed(
+          `Action failed with error: ${e.statusText || JSON.stringify(e)}`
+        );
       }
     })
   ).then(() => {
