@@ -1,5 +1,5 @@
 # WebPageTest Test Results
-Automatically triggered by [WebPageTest](https://www.webpagetest.org)'s GitHub Action.
+Automatically triggered by [WebPageTest](https://www.webpagetest.org)'s GitHub Action (forked You.com version).
 
 <% tests.forEach((test) => { %>
 ## Page Tested:<%- test.url %>

@@ -94,6 +94,7 @@ async function findPreviousComment(text) {
   }
   core.info("find comment");
   const { data: comments } = await findCommentsForEvent();
+  core.debug(`here are the comments \n ${JSON.stringify(comments)}`);
 
   const webPageTextResultsComment = comments.find((comment) =>
     comment.body.startsWith(text)
