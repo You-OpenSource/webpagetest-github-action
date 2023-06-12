@@ -260,6 +260,7 @@ async function run() {
       try {
         await runTest(wpt, url, options).then(async (result) => {
           try {
+            console.log(result)
             if (result.result.testId) {
               //test submitted with specs
               core.info(
