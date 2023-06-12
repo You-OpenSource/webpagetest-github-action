@@ -8,9 +8,6 @@ const WebPageTest = __nccwpck_require__(5095);
 const core = __nccwpck_require__(1728);
 const github = __nccwpck_require__(482);
 const ejs = __nccwpck_require__(2563);
-const { cornflowerblue } = __nccwpck_require__(1812);
-const { keyword } = __nccwpck_require__(2419);
-
 const WPT_BUDGET = core.getInput("budget");
 const WPT_OPTIONS = core.getInput("wptOptions");
 const WPT_API_KEY = core.getInput("apiKey");
@@ -30,8 +27,12 @@ const METRICS = {
 const isReportSupported = () =>
   GH_EVENT_NAME == "pull_request" || GH_EVENT_NAME == "issue_comment";
 
-const octokit = github.getOctokit(GITHUB_TOKEN, { log: console });
 const context = github.context;
+
+let octokit;
+if (githubToken) {
+  octokit = new github.GitHub(GITHUB_TOKEN);
+}
 
 const runTest = (wpt, url, options) => {
   // clone options object to avoid WPT wrapper issue
@@ -72,7 +73,7 @@ const retrieveResults = (wpt, testId) => {
  */
 
 function isPullRequestType(event) {
-  return event.startsWith('pull_request');
+  return event.startsWith("pull_request");
 }
 
 async function findCommentsForEvent() {

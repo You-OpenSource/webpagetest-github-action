@@ -2,9 +2,6 @@ const WebPageTest = require("webpagetest");
 const core = require("@actions/core");
 const github = require("@actions/github");
 const ejs = require("ejs");
-const { cornflowerblue } = require("color-name");
-const { keyword } = require("color-convert");
-
 const WPT_BUDGET = core.getInput("budget");
 const WPT_OPTIONS = core.getInput("wptOptions");
 const WPT_API_KEY = core.getInput("apiKey");
@@ -24,8 +21,12 @@ const METRICS = {
 const isReportSupported = () =>
   GH_EVENT_NAME == "pull_request" || GH_EVENT_NAME == "issue_comment";
 
-const octokit = github.getOctokit(GITHUB_TOKEN, { log: console });
 const context = github.context;
+
+let octokit;
+if (githubToken) {
+  octokit = new github.GitHub(GITHUB_TOKEN);
+}
 
 const runTest = (wpt, url, options) => {
   // clone options object to avoid WPT wrapper issue
@@ -66,7 +67,7 @@ const retrieveResults = (wpt, testId) => {
  */
 
 function isPullRequestType(event) {
-  return event.startsWith('pull_request');
+  return event.startsWith("pull_request");
 }
 
 async function findCommentsForEvent() {
