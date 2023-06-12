@@ -60,6 +60,7 @@ const retrieveResults = (wpt, testId) => {
     wpt.getTestResults(testId, (err, data) => {
       if (data) {
         return resolve(data);
+        console.log(data)
       } else {
         return reject(err);
       }
@@ -260,7 +261,6 @@ async function run() {
       try {
         await runTest(wpt, url, options).then(async (result) => {
           try {
-            console.log(result)
             if (result.result.testId) {
               //test submitted with specs
               core.info(
