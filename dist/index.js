@@ -30,7 +30,7 @@ const isReportSupported = () =>
 const context = github.context;
 
 let octokit;
-if (githubToken) {
+if (GITHUB_TOKEN) {
   octokit = new github.GitHub(GITHUB_TOKEN);
 }
 
