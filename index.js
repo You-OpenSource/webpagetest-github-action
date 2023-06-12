@@ -53,8 +53,8 @@ const retrieveResults = (wpt, testId) => {
   return new Promise((resolve, reject) => {
     wpt.getTestResults(testId, (err, data) => {
       if (data) {
-        return resolve(data);
         console.log(data)
+        return resolve(data);
       } else {
         return reject(err);
       }
