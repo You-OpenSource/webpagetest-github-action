@@ -59,7 +59,6 @@ const retrieveResults = (wpt, testId) => {
   return new Promise((resolve, reject) => {
     wpt.getTestResults(testId, (err, data) => {
       if (data) {
-        console.log(data)
         return resolve(data);
       } else {
         return reject(err);
@@ -200,6 +199,7 @@ function collectData(results, runData) {
     testLink: results.data.summary,
     waterfall: results.data.median.firstView.images.waterfall,
     metrics: [],
+    customMetrics: [],
   };
   for (const [key, value] of Object.entries(METRICS)) {
     core.debug(key);
@@ -211,6 +211,22 @@ function collectData(results, runData) {
       });
     }
   }
+
+  // lets get the custom metrics we want to track
+  if (results?.data?.lighthouse?.audits) {
+    const lighthouseAudits = results.data.lighthouse.audits;
+
+    // total # of 3rd party requests (and their size)
+    const num3rdPartyRequests = 0;
+    lighthouseAudits["third-party-summary"]?.details?.items.forEach((item) => {
+      num3rdPartyRequests += (item?.subItems?.items?.length || 0) + 1;
+    });
+    testData.customMetrics.push({
+      name: "# of 3rd party reqs",
+      value: num3rdPartyRequests,
+    });
+  }
+
   runData["tests"].push(testData);
 }
 async function run() {
