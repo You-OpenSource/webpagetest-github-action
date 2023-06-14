@@ -219,7 +219,7 @@ function collectData(results, runData) {
     if (results.data.median.firstView[key]) {
       testData.customMetrics.push({
         name: value,
-        value: results.data.median.firstView[key],
+        value: `${results.data.median.firstView[key] * 100}%`,
       });
     }
   }
