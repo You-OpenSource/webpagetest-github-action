@@ -217,7 +217,7 @@ function collectData(results, runData) {
     const lighthouseAudits = results.data.lighthouse.audits;
 
     // total # of 3rd party requests (and their size)
-    const num3rdPartyRequests = 0;
+    let num3rdPartyRequests = 0;
     lighthouseAudits["third-party-summary"]?.details?.items.forEach((item) => {
       num3rdPartyRequests += (item?.subItems?.items?.length || 0) + 1;
     });
