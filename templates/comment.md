@@ -12,7 +12,8 @@ Automatically triggered by [WebPageTest](https://www.webpagetest.org)'s GitHub A
 | <% test.metrics.forEach((metric) => { %><%- metric.name %> | <% }); %>
 | <% test.metrics.forEach((metric) => { %>--- | <% }); %>
 | <% test.metrics.forEach((metric) => { %><%- metric.value %> | <% }); %>
-<br/>
+
+
 ### Lighthouse Metrics
 | <% test.customMetrics.forEach((metric) => { %><%- metric.name %> | <% }); %>
 | <% test.customMetrics.forEach((metric) => { %>--- | <% }); %>
