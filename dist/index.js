@@ -24,6 +24,11 @@ const METRICS = {
   "chromeUserTiming.CumulativeLayoutShift": "Cumulative Layout Shift",
 };
 
+const LIGHTHOUSE_METRICS = {
+  "lighthouse.Performance": "Performance",
+  "lighthouse.Accessibility": "Accessibility",
+};
+
 const isReportSupported = () =>
   GH_EVENT_NAME == "pull_request" || GH_EVENT_NAME == "issue_comment";
 
@@ -213,6 +218,18 @@ function collectData(results, runData) {
   }
 
   // lets get the custom metrics we want to track
+  // core lighthouse metrics
+  for (const [key, value] of Object.entries(LIGHTHOUSE_METRICS)) {
+    core.debug(key);
+    core.debug(value);
+    if (results.data.median.firstView[key]) {
+      testData.customMetrics.push({
+        name: value,
+        value: results.data.median.firstView[key],
+      });
+    }
+  }
+
   if (results?.data?.lighthouse?.audits) {
     const lighthouseAudits = results.data.lighthouse.audits;
 
