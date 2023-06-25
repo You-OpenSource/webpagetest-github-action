@@ -100,7 +100,6 @@ async function findPreviousComment(text) {
   if (!octokit) {
     return null;
   }
-  core.info("find comment");
   const { data: comments } = await findCommentsForEvent();
   core.debug(`here are the comments \n ${JSON.stringify(comments)}`);
 
@@ -108,10 +107,8 @@ async function findPreviousComment(text) {
     comment.body.startsWith(text)
   );
   if (webPageTextResultsComment) {
-    core.info("previous comment found");
     return webPageTextResultsComment.id;
   }
-  core.info("previous comment not found");
   return null;
 }
 
