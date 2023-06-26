@@ -14,20 +14,47 @@ const WPT_API_KEY = core.getInput("apiKey");
 const WPT_URLS = core.getInput("urls").split("\n");
 const WPT_LABEL = core.getInput("label");
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
+const fs = __nccwpck_require__(7147);
 const DIRECTORY = process.env.GITHUB_WORKSPACE;
 const GH_EVENT_NAME = process.env.GITHUB_EVENT_NAME;
 const METRICS = {
-  TTFB: "Time to First Byte",
-  firstContentfulPaint: "First Contentful Paint",
-  TotalBlockingTime: "Total Blocking Time",
-  "chromeUserTiming.LargestContentfulPaint": "Largest Contentful Paint",
-  "chromeUserTiming.CumulativeLayoutShift": "Cumulative Layout Shift",
+  TTFB: {
+    label: "Time to First Byte",
+    // i couldn't think of anything better to call it
+    // if it's desc that means an decrease is good
+    metricDir: "desc",
+  },
+  firstContentfulPaint: {
+    label: "First Contentful Paint",
+    metricDir: "desc",
+  },
+  TotalBlockingTime: {
+    label: "Total Blocking Time",
+    metricDir: "desc",
+  },
+  "chromeUserTiming.LargestContentfulPaint": {
+    label: "Largest Contentful Paint",
+    metricDir: "desc",
+  },
+  "chromeUserTiming.CumulativeLayoutShift": {
+    label: "Cumulative Layout Shift",
+    metricDir: "desc",
+  },
 };
 
 const LIGHTHOUSE_METRICS = {
-  "lighthouse.Performance": "Performance",
-  "lighthouse.Accessibility": "Accessibility",
+  "lighthouse.Performance": {
+    label: "Performance",
+    metricDir: "asc",
+  },
+  "lighthouse.Accessibility": {
+    label: "Accessibility",
+    metricDir: "asc",
+  },
 };
+
+const STORED_METRIC_NAME = "perf_metrics.json";
+const STORED_METRIC_DIRECTORY = `${DIRECTORY}/${STORED_METRIC_NAME}`;
 
 const isReportSupported = () =>
   GH_EVENT_NAME == "pull_request" || GH_EVENT_NAME == "issue_comment";
@@ -37,6 +64,22 @@ const context = github.context;
 let octokit;
 if (GITHUB_TOKEN) {
   octokit = new github.GitHub(GITHUB_TOKEN);
+}
+
+async function getDevMetrics() {
+  try {
+    const fileData = await fs.readFile(STORED_METRIC_DIRECTORY, "utf-8");
+    return JSON.parse(fileData);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      // File does not exist; return empty object
+      return {};
+    }
+    // Rethrow the error if it's not a file not found error
+    throw error;
+  } finally {
+    return {};
+  }
 }
 
 const runTest = (wpt, url, options) => {
@@ -195,7 +238,31 @@ async function renderComment(data) {
     );
   }
 }
-function collectData(results, runData) {
+
+function diffMetric(currValue, prevValue) {
+  const REPLACE_STRING = "$difference";
+  const RETURN_TOKENS = {
+    same: "",
+    greater: `(📈 ${REPLACE_STRING}%)`,
+    less: `(📉 ${REPLACE_STRING}%)`,
+  };
+
+  if (!prevValue || !currValue) return RETURN_TOKENS["same"];
+
+  const diff = currValue - prevValue;
+  const diffInPercent = ((diff / prevValue) * 100).toFixed(2);
+
+  if (diff > 0) {
+    return RETURN_TOKENS["greater"].replace(REPLACE_STRING, diffInPercent);
+  } else if (diff < 0) {
+    return RETURN_TOKENS["less"].replace(REPLACE_STRING, diffInPercent);
+  }
+
+  return RETURN_TOKENS["same"];
+}
+
+async function collectData(results, runData) {
+  const devMetrics = await getDevMetrics();
   let testData = {
     url: results.data.url,
     testLink: results.data.summary,
@@ -206,10 +273,12 @@ function collectData(results, runData) {
   for (const [key, value] of Object.entries(METRICS)) {
     core.debug(key);
     core.debug(value);
-    if (results.data.median.firstView[key]) {
+    const testValue = results.data.median.firstView[key];
+    if (testValue) {
+      const { label } = value;
       testData.metrics.push({
-        name: value,
-        value: results.data.median.firstView[key],
+        name: label,
+        value: `${testValue} ${diffMetric(testValue, devMetrics[key])}`,
       });
     }
   }
@@ -219,10 +288,15 @@ function collectData(results, runData) {
   for (const [key, value] of Object.entries(LIGHTHOUSE_METRICS)) {
     core.debug(key);
     core.debug(value);
-    if (results.data.median.firstView[key]) {
+    const testValue = results.data.median.firstView[key];
+    if (testValue) {
+      const { label } = value;
       testData.customMetrics.push({
-        name: value,
-        value: `${results.data.median.firstView[key] * 100}%`,
+        name: label,
+        value: `${results.data.median.firstView[key] * 100}% ${diffMetric(
+          testValue,
+          devMetrics[key]
+        )}`,
       });
     }
   }
@@ -237,7 +311,10 @@ function collectData(results, runData) {
     });
     testData.customMetrics.push({
       name: "# of 3rd party reqs",
-      value: num3rdPartyRequests,
+      value: `${num3rdPartyRequests} ${diffMetric(
+        num3rdPartyRequests,
+        devMetrics["3rd-party-requests"]
+      )}`,
     });
   }
 
