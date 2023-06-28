@@ -201,6 +201,7 @@ async function createCommentOnPullRequest(body) {
 }
 
 async function renderComment(data) {
+  core.info(data);
   try {
     let markdown = await ejs.renderFile(
       `${__dirname}/templates/comment.md`,
@@ -328,6 +329,8 @@ async function collectData(results, runData) {
     }
   }
 
+  core.info("testData");
+  core.info(testData);
   runData["tests"].push(testData);
 }
 async function run() {
@@ -442,7 +445,7 @@ async function run() {
     })
   ).then(() => {
     if (isReportSupported()) {
-      core.info("Writing comment!")
+      core.info("Writing comment!");
       renderComment(runData);
     }
   });
