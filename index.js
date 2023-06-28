@@ -424,7 +424,7 @@ async function run() {
                   wpt,
                   result.result.data.id
                 );
-                collectData(testResults, runData);
+                await collectData(testResults, runData);
               }
               return;
             } else {
