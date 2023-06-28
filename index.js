@@ -446,6 +446,7 @@ async function run() {
   ).then(() => {
     if (isReportSupported()) {
       core.info("Writing comment!");
+      core.info(runData.tests?.[0]);
       renderComment(runData);
     }
   });
