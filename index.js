@@ -8,7 +8,7 @@ const WPT_API_KEY = core.getInput("apiKey");
 const WPT_URLS = core.getInput("urls").split("\n");
 const WPT_LABEL = core.getInput("label");
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
-const fs = require("fs");
+const fs = require("fs/promises");
 const DIRECTORY = process.env.GITHUB_WORKSPACE;
 const GH_EVENT_NAME = process.env.GITHUB_EVENT_NAME;
 const METRICS = {
@@ -317,6 +317,14 @@ async function collectData(results, runData) {
       )}`,
     });
     newDevMetrics[metricName] = num3rdPartyRequests;
+
+    // write the new dev metrics to the file
+    core.info("Writing new dev metrics!");
+    try {
+      await fs.writeFile(STORED_METRIC_NAME, newDevMetrics);
+    } catch (err) {
+      core.info("Error writing new dev metrics!", err);
+    }
   }
 
   runData["tests"].push(testData);
