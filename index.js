@@ -47,7 +47,7 @@ const LIGHTHOUSE_METRICS = {
   },
 };
 
-const STORED_METRIC_NAME = "perf_metrics.json";
+const STORED_METRIC_NAME = "perf-metrics.json";
 const STORED_METRIC_DIRECTORY = `${DIRECTORY}/${STORED_METRIC_NAME}`;
 
 const isReportSupported = () =>
@@ -257,6 +257,7 @@ function diffMetric(currValue, prevValue) {
 
 async function collectData(results, runData) {
   const devMetrics = await getDevMetrics();
+  const newDevMetrics = {};
   let testData = {
     url: results.data.url,
     testLink: results.data.summary,
@@ -272,8 +273,12 @@ async function collectData(results, runData) {
       const { label } = value;
       testData.metrics.push({
         name: label,
-        value: `${testValue} ${diffMetric(testValue, devMetrics[key])}`,
+        value: `${testValue.toFixed(2)} ${diffMetric(
+          testValue,
+          devMetrics[key]
+        )}`,
       });
+      newDevMetrics[key] = testValue;
     }
   }
 
@@ -287,19 +292,20 @@ async function collectData(results, runData) {
       const { label } = value;
       testData.customMetrics.push({
         name: label,
-        value: `${results.data.median.firstView[key] * 100}% ${diffMetric(
-          testValue,
-          devMetrics[key]
-        )}`,
+        value: `${(results.data.median.firstView[key] * 100).toFixed(
+          2
+        )}% ${diffMetric(testValue, devMetrics[key])}`,
       });
+      newDevMetrics[key] = testValue;
     }
   }
 
   if (results?.data?.lighthouse?.audits) {
     const lighthouseAudits = results.data.lighthouse.audits;
 
-    // total # of 3rd party requests (and their size)
+    // total # of 3rd party requests
     let num3rdPartyRequests = 0;
+    const metricName = "3rd-party-requests";
     lighthouseAudits["third-party-summary"]?.details?.items.forEach((item) => {
       num3rdPartyRequests += (item?.subItems?.items?.length || 0) + 1;
     });
@@ -307,9 +313,10 @@ async function collectData(results, runData) {
       name: "# of 3rd party reqs",
       value: `${num3rdPartyRequests} ${diffMetric(
         num3rdPartyRequests,
-        devMetrics["3rd-party-requests"]
+        devMetrics[metricName]
       )}`,
     });
+    newDevMetrics[metricName] = num3rdPartyRequests;
   }
 
   runData["tests"].push(testData);

@@ -53,7 +53,7 @@ const LIGHTHOUSE_METRICS = {
   },
 };
 
-const STORED_METRIC_NAME = "perf_metrics.json";
+const STORED_METRIC_NAME = "perf-metrics.json";
 const STORED_METRIC_DIRECTORY = `${DIRECTORY}/${STORED_METRIC_NAME}`;
 
 const isReportSupported = () =>
@@ -278,7 +278,7 @@ async function collectData(results, runData) {
       const { label } = value;
       testData.metrics.push({
         name: label,
-        value: `${testValue} ${diffMetric(testValue, devMetrics[key])}`,
+        value: `${testValue.toFixed(2)} ${diffMetric(testValue, devMetrics[key])}`,
       });
     }
   }
@@ -293,7 +293,7 @@ async function collectData(results, runData) {
       const { label } = value;
       testData.customMetrics.push({
         name: label,
-        value: `${results.data.median.firstView[key] * 100}% ${diffMetric(
+        value: `${(results.data.median.firstView[key] * 100).toFixed(2)}% ${diffMetric(
           testValue,
           devMetrics[key]
         )}`,
