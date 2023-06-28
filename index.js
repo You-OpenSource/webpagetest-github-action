@@ -398,7 +398,7 @@ async function run() {
                   wpt,
                   result.result.testId
                 );
-                collectData(testResults, runData);
+                await collectData(testResults, runData);
               }
               // testspecs also returns the number of assertion fails as err
               // > 0 means we need to fail
