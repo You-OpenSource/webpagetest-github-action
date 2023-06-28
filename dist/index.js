@@ -336,8 +336,9 @@ async function collectData(results, runData) {
   }
 
   core.info("testData");
-  core.info(testData);
+  core.info(Object.keys(testData));
   runData["tests"].push(testData);
+  core.info(runData.tests);
 }
 async function run() {
   const wpt = new WebPageTest("www.webpagetest.org", WPT_API_KEY);
