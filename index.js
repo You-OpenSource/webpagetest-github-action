@@ -323,7 +323,8 @@ async function collectData(results, runData) {
     try {
       await fs.writeFile(STORED_METRIC_NAME, newDevMetrics);
     } catch (err) {
-      core.info("Error writing new dev metrics!", err);
+      core.info("Error writing new dev metrics!");
+      core.info(err);
     }
   }
 
