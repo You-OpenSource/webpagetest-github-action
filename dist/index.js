@@ -80,6 +80,8 @@ async function getDevMetrics() {
       }
     );
 
+    core.info(artifacts.length)
+    core.info(artifacts)
     core.info("Getting latest artifact");
     const mostRecentBaseBranchArtifact = artifacts?.filter(
       ({ workflow_run }) => workflow_run.head_branch === BASE_BRANCH
@@ -291,8 +293,7 @@ function diffMetric(currValue, prevValue) {
   return RETURN_TOKENS["same"];
 }
 
-async function collectData(results, runData) {
-  const devMetrics = await getDevMetrics();
+async function collectData(results, runData, devMetrics) {
   const newDevMetrics = {};
   let testData = {
     url: results.data.url,
@@ -371,6 +372,7 @@ async function collectData(results, runData) {
 }
 async function run() {
   const wpt = new WebPageTest("www.webpagetest.org", WPT_API_KEY);
+  const oldDevMetrics = await getDevMetrics();
 
   //TODO: make this configurable
   let options = {
@@ -432,7 +434,7 @@ async function run() {
                 wpt,
                 result.result.testId
               );
-              await collectData(testResults, runData);
+              await collectData(testResults, runData, oldDevMetrics);
 
               // testspecs also returns the number of assertion fails as err
               // > 0 means we need to fail
@@ -458,7 +460,7 @@ async function run() {
                   wpt,
                   result.result.data.id
                 );
-                await collectData(testResults, runData);
+                await collectData(testResults, runData, oldDevMetrics);
               }
               return;
             } else {
