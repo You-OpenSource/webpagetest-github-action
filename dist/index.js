@@ -69,7 +69,7 @@ octokit = new github.GitHub(GITHUB_TOKEN);
 async function getDevMetrics() {
   try {
     core.info("Getting all artifacts");
-    const { artifacts } = await octokit.request(
+    const results = await octokit.request(
       `GET /repos/${context.repo.owner}/${context.repo.repo}/actions/artifacts?name=perf-metrics&per_page=100`,
       {
         owner: context.repo.owner,
@@ -80,7 +80,10 @@ async function getDevMetrics() {
       }
     );
 
-    core.info(artifacts.length)
+    core.info(results);
+    const artifacts = results?.artifacts;
+
+    core.info(artifacts?.length)
     core.info(artifacts)
     core.info("Getting latest artifact");
     const mostRecentBaseBranchArtifact = artifacts?.filter(
