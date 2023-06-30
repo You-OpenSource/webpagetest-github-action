@@ -107,6 +107,8 @@ async function getDevMetrics() {
       return JSON.parse(fileData);
     }
   } catch (err) {
+    core.info("Error getting artifact")
+    core.info(err)
     return {};
   } finally {
     return {};
