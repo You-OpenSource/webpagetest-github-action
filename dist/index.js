@@ -399,13 +399,12 @@ async function run() {
                   result.result.testId
               );
 
-              if (isReportSupported()) {
-                let testResults = await retrieveResults(
-                  wpt,
-                  result.result.testId
-                );
-                await collectData(testResults, runData);
-              }
+              let testResults = await retrieveResults(
+                wpt,
+                result.result.testId
+              );
+              await collectData(testResults, runData);
+
               // testspecs also returns the number of assertion fails as err
               // > 0 means we need to fail
               if (result.err && result.err > 0) {
