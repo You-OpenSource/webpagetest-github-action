@@ -17,6 +17,9 @@ inputs:
   wptOptions:
     description: 'Path to JSON file with WebPageTest test options (see https://github.com/marcelduran/webpagetest-api#test-works-for-runtest-method-only)'
     required: false
+  baseBranch:
+    description: 'The base branch of the PR (if applicable) - should be ${{ github.base_ref }}',
+    required: false
   GITHUB_TOKEN:
     description: 'Secret GitHub Token (automatically provided by GitHub)'
     default: ${{ github.token }}

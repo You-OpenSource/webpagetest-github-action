@@ -1,4 +1,5 @@
 const WebPageTest = require("webpagetest");
+const AdmZip = require("adm-zip");
 const core = require("@actions/core");
 const github = require("@actions/github");
 const ejs = require("ejs");
@@ -8,6 +9,7 @@ const WPT_API_KEY = core.getInput("apiKey");
 const WPT_URLS = core.getInput("urls").split("\n");
 const WPT_LABEL = core.getInput("label");
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
+const BASE_BRANCH = core.getInput("baseBranch") || "dev";
 const fs = require("fs/promises");
 const DIRECTORY = process.env.GITHUB_WORKSPACE;
 const GH_EVENT_NAME = process.env.GITHUB_EVENT_NAME;
@@ -56,21 +58,48 @@ const isReportSupported = () =>
 const context = github.context;
 
 let octokit;
-if (GITHUB_TOKEN) {
-  octokit = new github.GitHub(GITHUB_TOKEN);
-}
+octokit = new github.GitHub(GITHUB_TOKEN);
 
 async function getDevMetrics() {
   try {
-    const fileData = await fs.readFile(STORED_METRIC_DIRECTORY, "utf-8");
-    return JSON.parse(fileData);
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      // File does not exist; return empty object
-      return {};
+    core.info("Getting all artifacts");
+    const { artifacts } = await octokit.request(
+      `GET /repos/${context.repo.owner}/${context.repo.repo}/actions/artifacts?name=perf-metrics&per_page=100`,
+      {
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }
+    );
+
+    core.info("Getting latest artifact");
+    const mostRecentBaseBranchArtifact = artifacts?.filter(
+      ({ workflow_run }) => workflow_run.head_branch === BASE_BRANCH
+    )?.[0];
+    core.info(mostRecentBaseBranchArtifact);
+
+    if (mostRecentBaseBranchArtifact?.id) {
+      core.info("Getting zip of artifact");
+      // we now want to download the artifact and it's JSON
+      const zip = await octokit.actions.downloadArtifact({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        artifact_id: mostRecentBaseBranchArtifact.id,
+        archive_format: "zip",
+      });
+
+      core.info("Unzipping artifact");
+      const unzipper = new AdmZip(Buffer.from(zip.data));
+      await unzipper.extractAllToAsync("./", true);
+
+      core.info("reading and returning artifact");
+      const fileData = await fs.readFile(STORED_METRIC_DIRECTORY, "utf-8");
+      return JSON.parse(fileData);
     }
-    // Rethrow the error if it's not a file not found error
-    throw error;
+  } catch (err) {
+    return {};
   } finally {
     return {};
   }
