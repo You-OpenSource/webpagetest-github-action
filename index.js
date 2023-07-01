@@ -99,15 +99,15 @@ async function getDevMetrics() {
       core.info("Unzipping artifact");
       await fs.mkdir("./", { recursive: true });
       const unzipper = new AdmZip(Buffer.from(zip.data));
-      core.info("files in the unzipper")
+      core.info("files in the unzipper");
       unzipper.getEntries().forEach((entry) => {
-        core.info(entry.entryName)
-      })
-      await unzipper.extractAllToAsync("./", true);
-
-      core.info("reading and returning artifact");
-      const fileData = await fs.readFile(STORED_METRIC_DIRECTORY, "utf-8");
-      return JSON.parse(fileData);
+        core.info(entry.entryName);
+      });
+      unzipper.extractAllToAsync("./", true, false, async () => {
+        core.info("reading and returning artifact");
+        const fileData = await fs.readFile(STORED_METRIC_DIRECTORY, "utf-8");
+        return JSON.parse(fileData);
+      });
     }
   } catch (err) {
     core.info("Error getting artifact");
