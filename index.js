@@ -94,8 +94,8 @@ async function getDevMetrics() {
         archive_format: "zip",
       });
 
-      
-      core.info(zip)
+      core.info(zip);
+      core.info(Object.keys(zip));
       core.info("Unzipping artifact");
       const unzipper = new AdmZip(Buffer.from(zip.data));
       await unzipper.extractAllToAsync("./", true);
