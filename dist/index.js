@@ -66,6 +66,18 @@ const context = github.context;
 let octokit;
 octokit = new github.GitHub(GITHUB_TOKEN);
 
+function extractZipAsync(AdmZipInstance) {
+  return new Promise((resolve, reject) => {
+    AdmZipInstance.extractAllToAsync("./", true, false, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 async function getDevMetrics() {
   try {
     core.info("Getting all artifacts");
@@ -109,11 +121,10 @@ async function getDevMetrics() {
       unzipper.getEntries().forEach((entry) => {
         core.info(entry.entryName);
       });
-      unzipper.extractAllToAsync("./", true, false, async () => {
-        core.info("reading and returning artifact");
-        const fileData = await fs.readFile(STORED_METRIC_DIRECTORY, "utf-8");
-        return JSON.parse(fileData);
-      });
+      await extractZipAsync(unzipper);
+      core.info("reading and returning artifact");
+      const fileData = await fs.readFile(STORED_METRIC_DIRECTORY, "utf-8");
+      return JSON.parse(fileData);
     }
   } catch (err) {
     core.info("Error getting artifact");
