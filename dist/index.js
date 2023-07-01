@@ -105,6 +105,10 @@ async function getDevMetrics() {
       core.info("Unzipping artifact");
       await fs.mkdir("./", { recursive: true });
       const unzipper = new AdmZip(Buffer.from(zip.data));
+      core.info("files in the unzipper")
+      unzipper.getEntries().forEach((entry) => {
+        core.info(entry.entryName)
+      })
       await unzipper.extractAllToAsync("./", true);
 
       core.info("reading and returning artifact");
