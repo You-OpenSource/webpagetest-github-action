@@ -128,8 +128,6 @@ async function getDevMetrics() {
     core.info("Error getting artifact");
     core.info(err);
     return {};
-  } finally {
-    return {};
   }
 }
 
