@@ -74,8 +74,8 @@ async function getDevMetrics() {
       }
     );
 
-    core.info(results);
-    core.info(Object.keys(results));
+    core.info(results.data);
+    core.info(Object.keys(results.data));
     const artifacts = results?.artifacts;
 
     core.info(artifacts?.length)
