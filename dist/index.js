@@ -395,6 +395,7 @@ async function collectData(results, runData, devMetrics) {
 async function run() {
   const wpt = new WebPageTest("www.webpagetest.org", WPT_API_KEY);
   const oldDevMetrics = await getDevMetrics();
+  core.info(JSON.stringify(oldDevMetrics));
 
   //TODO: make this configurable
   let options = {
