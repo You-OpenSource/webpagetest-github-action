@@ -62,11 +62,13 @@ octokit = new github.GitHub(GITHUB_TOKEN);
 
 function extractZipAsync(AdmZipInstance) {
   return new Promise((resolve, reject) => {
-    AdmZipInstance.extractAllToAsync("./", true, false, function (err) {
-      if (err) {
-        reject(err);
+    const entry = AdmZipInstance.getEntries()?.[0];
+    core.info(entry.entryName);
+    unzipper.readAsTextAsync(entry.entryName, (data, error) => {
+      if (error) {
+        reject(error);
       } else {
-        resolve();
+        resolve(data);
       }
     });
   });
@@ -112,15 +114,8 @@ async function getDevMetrics() {
       await fs.mkdir("./", { recursive: true });
       const unzipper = new AdmZip(Buffer.from(zip.data));
       core.info("files in the unzipper");
-      unzipper.getEntries().forEach((entry) => {
-        core.info(entry.entryName);
-        unzipper.readAsTextAsync(entry.entryName, (data) => {
-          core.info(data)
-        })
-      });
-      await extractZipAsync(unzipper);
-      core.info("reading and returning artifact");
-      const fileData = await fs.readFile(STORED_METRIC_DIRECTORY, "utf-8");
+      const fileData = await extractZipAsync(unzipper);
+      core.info(fileData);
       return JSON.parse(fileData);
     }
   } catch (err) {
@@ -391,7 +386,7 @@ async function collectData(results, runData, devMetrics) {
   core.info(Object.keys(testData));
   runData["tests"].push(testData);
   core.info(runData.tests);
-  core.info("--- END COLLECTDATA ---")
+  core.info("--- END COLLECTDATA ---");
 }
 async function run() {
   const wpt = new WebPageTest("www.webpagetest.org", WPT_API_KEY);
