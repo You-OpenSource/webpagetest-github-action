@@ -120,6 +120,9 @@ async function getDevMetrics() {
       core.info("files in the unzipper");
       unzipper.getEntries().forEach((entry) => {
         core.info(entry.entryName);
+        unzipper.readAsTextAsync(entry.entryName, (data) => {
+          core.info(data)
+        })
       });
       await extractZipAsync(unzipper);
       core.info("reading and returning artifact");
