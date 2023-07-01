@@ -76,8 +76,8 @@ async function getDevMetrics() {
 
     const artifacts = results?.data?.artifacts;
 
-    core.info(artifacts?.length)
-    core.info(artifacts)
+    core.info(artifacts?.length);
+    core.info(artifacts);
     core.info("Getting latest artifact");
     const mostRecentBaseBranchArtifact = artifacts?.filter(
       ({ workflow_run }) => workflow_run.head_branch === BASE_BRANCH
@@ -95,9 +95,9 @@ async function getDevMetrics() {
       });
 
       core.info(zip);
-      core.info(zip.data)
-      core.info(Object.keys(zip.data));
+      core.info(zip.data);
       core.info("Unzipping artifact");
+      await fs.mkdir("./", { recursive: true });
       const unzipper = new AdmZip(Buffer.from(zip.data));
       await unzipper.extractAllToAsync("./", true);
 
@@ -106,8 +106,8 @@ async function getDevMetrics() {
       return JSON.parse(fileData);
     }
   } catch (err) {
-    core.info("Error getting artifact")
-    core.info(err)
+    core.info("Error getting artifact");
+    core.info(err);
     return {};
   } finally {
     return {};
