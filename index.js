@@ -310,6 +310,9 @@ function diffMetric(currValue, prevValue) {
 }
 
 async function collectData(results, runData, devMetrics) {
+  core.info("--- COLLECT DATA ---");
+  core.info(devMetrics);
+  core.info(Object.keys(devMetrics));
   const newDevMetrics = {};
   let testData = {
     url: results.data.url,
@@ -333,6 +336,7 @@ async function collectData(results, runData, devMetrics) {
       });
       newDevMetrics[key] = testValue;
     }
+    core.info("--- END COLLECTDATA ---")
   }
 
   // lets get the custom metrics we want to track
