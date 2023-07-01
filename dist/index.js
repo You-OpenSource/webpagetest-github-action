@@ -70,7 +70,7 @@ function extractZipAsync(AdmZipInstance) {
   return new Promise((resolve, reject) => {
     const entry = AdmZipInstance.getEntries()?.[0];
     core.info(entry.entryName);
-    unzipper.readAsTextAsync(entry.entryName, (data, error) => {
+    AdmZipInstance.readAsTextAsync(entry.entryName, (data, error) => {
       if (error) {
         reject(error);
       } else {
