@@ -69,7 +69,6 @@ octokit = new github.GitHub(GITHUB_TOKEN);
 function extractZipAsync(AdmZipInstance) {
   return new Promise((resolve, reject) => {
     const entry = AdmZipInstance.getEntries()?.[0];
-    core.info(entry.entryName);
     AdmZipInstance.readAsTextAsync(entry.entryName, (data, error) => {
       if (error) {
         reject(error);
@@ -94,10 +93,8 @@ async function getDevMetrics() {
       }
     );
 
-    const artifacts = results?.data?.artifacts;
-
-    core.info(artifacts?.length);
-    core.info(artifacts);
+    const artifacts = results?.data?.artifacts || [];
+    core.info(`${artifacts?.length} artifacts found`);
     core.info("Getting latest artifact");
     const mostRecentBaseBranchArtifact = artifacts?.filter(
       ({ workflow_run }) => workflow_run.head_branch === BASE_BRANCH
@@ -105,7 +102,6 @@ async function getDevMetrics() {
     core.info(mostRecentBaseBranchArtifact);
 
     if (mostRecentBaseBranchArtifact?.id) {
-      core.info("Getting zip of artifact");
       // we now want to download the artifact and it's JSON
       const zip = await octokit.actions.downloadArtifact({
         owner: context.repo.owner,
@@ -114,14 +110,9 @@ async function getDevMetrics() {
         archive_format: "zip",
       });
 
-      core.info(zip);
-      core.info(zip.data);
-      core.info("Unzipping artifact");
       await fs.mkdir("./", { recursive: true });
       const unzipper = new AdmZip(Buffer.from(zip.data));
-      core.info("files in the unzipper");
       const fileData = await extractZipAsync(unzipper);
-      core.info(fileData);
       return JSON.parse(fileData);
     }
   } catch (err) {
@@ -256,7 +247,6 @@ async function createCommentOnPullRequest(body) {
 }
 
 async function renderComment(data) {
-  core.info(data);
   try {
     let markdown = await ejs.renderFile(
       __nccwpck_require__.ab + "comment.md",
@@ -312,9 +302,6 @@ function diffMetric(currValue, prevValue) {
 }
 
 async function collectData(results, runData, devMetrics) {
-  core.info("--- COLLECT DATA ---");
-  core.info(JSON.stringify(devMetrics));
-  core.info(Object.keys(devMetrics));
   const newDevMetrics = {};
   let testData = {
     url: results.data.url,
@@ -386,16 +373,11 @@ async function collectData(results, runData, devMetrics) {
     core.info(err);
   }
 
-  core.info("testData");
-  core.info(Object.keys(testData));
   runData["tests"].push(testData);
-  core.info(runData.tests);
-  core.info("--- END COLLECTDATA ---");
 }
 async function run() {
   const wpt = new WebPageTest("www.webpagetest.org", WPT_API_KEY);
   const oldDevMetrics = await getDevMetrics();
-  core.info(JSON.stringify(oldDevMetrics));
 
   //TODO: make this configurable
   let options = {
@@ -506,7 +488,6 @@ async function run() {
   ).then(() => {
     if (isReportSupported()) {
       core.info("Writing comment!");
-      core.info(runData.tests?.[0]);
       renderComment(runData);
     }
   });
