@@ -113,7 +113,7 @@ async function getDevMetrics() {
       await fs.mkdir("./", { recursive: true });
       const unzipper = new AdmZip(Buffer.from(zip.data));
       const fileData = await extractZipAsync(unzipper);
-      return JSON.parse(fileData);
+      return JSON.parse(fileData) || {};
     }
   } catch (err) {
     core.info("Error getting artifact");
@@ -320,7 +320,7 @@ async function collectData(results, runData, devMetrics) {
         name: label,
         value: `${testValue.toFixed(2)} ${diffMetric(
           testValue,
-          devMetrics[key]
+          devMetrics?.[key]
         )}`,
       });
       newDevMetrics[key] = testValue;
@@ -339,7 +339,7 @@ async function collectData(results, runData, devMetrics) {
         name: label,
         value: `${(results.data.median.firstView[key] * 100).toFixed(
           2
-        )}% ${diffMetric(testValue, devMetrics[key])}`,
+        )}% ${diffMetric(testValue, devMetrics?.[key])}`,
       });
       newDevMetrics[key] = testValue;
     }
@@ -358,7 +358,7 @@ async function collectData(results, runData, devMetrics) {
       name: "# of 3rd party reqs",
       value: `${num3rdPartyRequests} ${diffMetric(
         num3rdPartyRequests,
-        devMetrics[metricName]
+        devMetrics?.[metricName]
       )}`,
     });
     newDevMetrics[metricName] = num3rdPartyRequests;
