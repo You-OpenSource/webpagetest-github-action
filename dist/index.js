@@ -56,7 +56,7 @@ const LIGHTHOUSE_METRICS = {
 };
 
 const BUNDLE_METRICS = {
-  "median.firstView.breakdown.js.bytes": {
+  "breakdown.js.bytes": {
     label: "Total JS (compressed)",
     metricDir: "desc",
   },
@@ -344,8 +344,8 @@ async function collectData(results, runData, devMetrics) {
   // lets get the custom metrics we want to track
   // core bundle sizes
   for (const [key, value] of Object.entries(BUNDLE_METRICS)) {
-    core.debug(key);
-    core.debug(value);
+    core.info(key);
+    core.info(value);
     const testValue = results.data.median.firstView[key];
     if (testValue) {
       const { label } = value;
