@@ -345,8 +345,8 @@ async function collectData(results, runData, devMetrics) {
   // core bundle sizes
   for (const [key, value] of Object.entries(BUNDLE_METRICS)) {
     core.info(key);
-    core.info(value);
     const testValue = results.data.median.firstView[key];
+    core.info(testValue);
     if (testValue) {
       const { label } = value;
       const devMetric = devMetrics?.[key] || testValue;
