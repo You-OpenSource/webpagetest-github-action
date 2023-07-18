@@ -330,7 +330,7 @@ async function collectData(results, runData, devMetrics) {
 
   // lets get the custom metrics we want to track
   // core bundle sizes
-  if (results.data.media.firstView["breakdown"]) {
+  if (results.data.median.firstView["breakdown"]) {
     const key = "total_js_compressed";
     const testValue = results.data.median.firstView?.breakdown?.js?.bytes;
     if (testValue) {
