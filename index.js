@@ -287,7 +287,7 @@ function diffMetric(currValue, prevValue, showRawDifference = false) {
   const diff = currValue - prevValue;
 
   // we just want to return the difference as a number
-  if (showRawDifference)
+  if (showRawDifference !== 0)
     return RETURN_TOKENS["rawDifference"].replace(REPLACE_STRING, diff);
 
   const diffInPercent = ((diff / prevValue) * 100).toFixed(2);
