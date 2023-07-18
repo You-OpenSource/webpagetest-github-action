@@ -349,16 +349,13 @@ async function collectData(results, runData, devMetrics) {
     const testValue = results.data.median.firstView[key];
     if (testValue) {
       const { label } = value;
+      const devMetric = devMetrics?.[key] || testValue;
       testData.customMetrics.push({
         name: label,
-        value: `${testValue} bytes ${diffMetric(
-          testValue,
-          devMetrics?.[key],
-          true
-        )}`,
+        value: `${testValue} bytes ${diffMetric(testValue, devMetric, true)}`,
       });
 
-      if (Math.abs(testValue - devMetrics?.[key]) >= 10000) {
+      if (Math.abs(testValue - devMetric) >= 10000) {
         testData.shouldFlagBundleChange = true;
       }
 
