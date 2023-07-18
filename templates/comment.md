@@ -9,14 +9,18 @@ Automatically triggered by [WebPageTest](https://www.webpagetest.org)'s GitHub A
 **Full test results: <%- test.testLink %>**
 
 ### WebPageTest Metrics
+
 | <% test.metrics.forEach((metric) => { %><%- metric.name %> | <% }); %>
 | <% test.metrics.forEach((metric) => { %>--- | <% }); %>
 | <% test.metrics.forEach((metric) => { %><%- metric.value %> | <% }); %>
 
+### Bundle Size
 
-### Lighthouse Metrics
 | <% test.customMetrics.forEach((metric) => { %><%- metric.name %> | <% }); %>
 | <% test.customMetrics.forEach((metric) => { %>--- | <% }); %>
 | <% test.customMetrics.forEach((metric) => { %><%- metric.value %> | <% }); %>
 
+<% if (test.shouldFlagBundleChange) { %>
+**The bundle size change from this PR is more than 10kb. Consider dynamically importing any new components to reduce this**
+<% } %>
 <% }); %>

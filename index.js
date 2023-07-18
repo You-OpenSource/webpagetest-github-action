@@ -49,6 +49,13 @@ const LIGHTHOUSE_METRICS = {
   },
 };
 
+const BUNDLE_METRICS = {
+  "median.firstView.breakdown.js.bytes": {
+    label: "Total JS (compressed)",
+    metricDir: "desc",
+  },
+};
+
 const STORED_METRIC_NAME = "perf-metrics.json";
 const STORED_METRIC_DIRECTORY = `${DIRECTORY}/${STORED_METRIC_NAME}`;
 
@@ -273,17 +280,23 @@ async function renderComment(data) {
   }
 }
 
-function diffMetric(currValue, prevValue) {
+function diffMetric(currValue, prevValue, showRawDifference = false) {
   const REPLACE_STRING = "$difference";
   const RETURN_TOKENS = {
     same: "",
     greater: `(📈 ${REPLACE_STRING}%)`,
     less: `(📉 ${REPLACE_STRING}%)`,
+    rawDifference: `(${REPLACE_STRING})`,
   };
 
   if (!prevValue || !currValue) return RETURN_TOKENS["same"];
 
   const diff = currValue - prevValue;
+
+  // we just want to return the difference as a number
+  if (showRawDifference)
+    return RETURN_TOKENS["rawDifference"].replace(REPLACE_STRING, diff);
+
   const diffInPercent = ((diff / prevValue) * 100).toFixed(2);
 
   if (diff > 0) {
@@ -303,6 +316,7 @@ async function collectData(results, runData, devMetrics) {
     waterfall: results.data.median.firstView.images.waterfall,
     metrics: [],
     customMetrics: [],
+    shouldFlagBundleChange: false,
   };
   for (const [key, value] of Object.entries(METRICS)) {
     core.debug(key);
@@ -322,8 +336,8 @@ async function collectData(results, runData, devMetrics) {
   }
 
   // lets get the custom metrics we want to track
-  // core lighthouse metrics
-  for (const [key, value] of Object.entries(LIGHTHOUSE_METRICS)) {
+  // core bundle sizes
+  for (const [key, value] of Object.entries(BUNDLE_METRICS)) {
     core.debug(key);
     core.debug(value);
     const testValue = results.data.median.firstView[key];
@@ -331,10 +345,17 @@ async function collectData(results, runData, devMetrics) {
       const { label } = value;
       testData.customMetrics.push({
         name: label,
-        value: `${(results.data.median.firstView[key] * 100).toFixed(
-          2
-        )}% ${diffMetric(testValue, devMetrics?.[key])}`,
+        value: `${testValue} bytes ${diffMetric(
+          testValue,
+          devMetrics?.[key],
+          true
+        )}`,
       });
+
+      if (Math.abs(testValue - devMetrics?.[key]) >= 10000) {
+        testData.shouldFlagBundleChange = true;
+      }
+
       newDevMetrics[key] = testValue;
     }
   }
