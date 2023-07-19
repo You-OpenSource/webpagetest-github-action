@@ -464,13 +464,12 @@ async function run() {
                   result.result.data.summary
               );
 
-              if (isReportSupported()) {
-                let testResults = await retrieveResults(
-                  wpt,
-                  result.result.data.id
-                );
-                await collectData(testResults, runData, oldDevMetrics);
-              }
+              let testResults = await retrieveResults(
+                wpt,
+                result.result.data.id
+              );
+              await collectData(testResults, runData, oldDevMetrics);
+
               return;
             } else {
               return;
