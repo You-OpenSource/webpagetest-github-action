@@ -347,7 +347,7 @@ async function collectData(results, runData, devMetrics) {
         value: `${testValue} bytes ${diffMetric(testValue, devMetric, true)}`,
       });
 
-      if (Math.abs(testValue - devMetric) >= 10000) {
+      if (testValue - devMetric >= 10000) {
         testData.shouldFlagBundleChange = true;
       }
 
